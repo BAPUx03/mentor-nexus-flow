@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Sun, Moon, User, LogOut, Settings, Bookmark, LayoutDashboard } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, Sun, Moon, User, LogOut, Settings, Bookmark, LayoutDashboard, ChevronDown, BookOpen, Code, FileText, Package, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,19 +9,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { SearchButton } from "@/components/search/SearchDialog";
+import { cn } from "@/lib/utils";
 
-const navigation = [
+const mainNavigation = [
   { name: "Home", href: "/" },
-  { name: "Blogs", href: "/blogs" },
-  { name: "Tutorials", href: "/tutorials" },
-  { name: "Code Library", href: "/code-library" },
-  { name: "Materials", href: "/materials" },
-  { name: "Community", href: "/community" },
+  { name: "Community", href: "/community", icon: Users },
+];
+
+const resourcesNavigation = [
+  { name: "Blogs", href: "/blogs", icon: FileText, description: "Articles and insights" },
+  { name: "Tutorials", href: "/tutorials", icon: BookOpen, description: "Step-by-step guides" },
+  { name: "Code Library", href: "/code-library", icon: Code, description: "Reusable code snippets" },
+  { name: "Materials", href: "/materials", icon: Package, description: "Learning resources" },
 ];
 
 export function Header() {
@@ -30,6 +42,7 @@ export function Header() {
   const { user, signOut } = useAuth();
   const { isAdmin } = useUserRole();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,11 +61,16 @@ export function Header() {
     return email?.slice(0, 2).toUpperCase() || "U";
   };
 
+  const isActive = (href: string) => {
+    if (href === "/") return location.pathname === "/";
+    return location.pathname.startsWith(href);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 glass">
       <nav className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground font-heading font-bold text-sm shadow-glow group-hover:scale-105 transition-transform">
               DL
@@ -61,23 +79,68 @@ export function Header() {
               DevLearn
             </span>
           </Link>
-        </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex lg:items-center lg:gap-1">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
-            >
-              {item.name}
-            </Link>
-          ))}
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex lg:items-center lg:gap-1">
+            {mainNavigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "px-3 py-2 text-sm font-medium transition-colors rounded-lg",
+                  isActive(item.href)
+                    ? "text-foreground bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                {item.name}
+              </Link>
+            ))}
+
+            {/* Resources Dropdown */}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-transparent hover:bg-muted data-[state=open]:bg-muted">
+                    Resources
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-1 p-2">
+                      {resourcesNavigation.map((item) => (
+                        <li key={item.name}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to={item.href}
+                              className={cn(
+                                "flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-muted",
+                                isActive(item.href) && "bg-muted"
+                              )}
+                            >
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <item.icon className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-foreground">
+                                  {item.name}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {item.description}
+                                </div>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Search */}
           <div className="hidden md:block">
             <SearchButton />
@@ -165,10 +228,10 @@ export function Header() {
             </DropdownMenu>
           ) : (
             <div className="hidden sm:flex items-center gap-2">
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" size="sm" asChild>
                 <Link to="/auth">Sign in</Link>
               </Button>
-              <Button className="bg-gradient-primary hover:opacity-90 transition-opacity" asChild>
+              <Button size="sm" className="bg-gradient-primary hover:opacity-90 transition-opacity" asChild>
                 <Link to="/auth?mode=signup">Get Started</Link>
               </Button>
             </div>
@@ -193,29 +256,60 @@ export function Header() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-border/50 bg-background animate-slide-down">
-          <div className="container mx-auto px-4 py-4 space-y-3">
+          <div className="container mx-auto px-4 py-4 space-y-4">
             {/* Mobile Search */}
             <div className="md:hidden">
               <SearchButton className="w-full" />
             </div>
 
             {/* Mobile Navigation */}
-            <div className="flex flex-col space-y-1">
-              {navigation.map((item) => (
+            <div className="space-y-1">
+              {mainNavigation.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="px-3 py-2.5 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 text-base font-medium rounded-lg transition-colors",
+                    isActive(item.href)
+                      ? "text-foreground bg-muted"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  {item.icon && <item.icon className="h-5 w-5" />}
                   {item.name}
                 </Link>
               ))}
             </div>
 
+            {/* Resources Section */}
+            <div className="border-t border-border pt-4">
+              <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Resources
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {resourcesNavigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
+                      isActive(item.href)
+                        ? "text-foreground bg-muted"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
             {/* Mobile Auth Buttons */}
             {!user && (
-              <div className="flex flex-col gap-2 pt-3 border-t border-border">
+              <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 <Button variant="outline" asChild className="w-full">
                   <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                     Sign in
