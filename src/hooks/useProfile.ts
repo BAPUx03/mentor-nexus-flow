@@ -24,6 +24,7 @@ export function useProfile(userId?: string) {
   const [loading, setLoading] = useState(true);
 
   const targetUserId = userId || user?.id;
+  const isOwnProfile = !userId || userId === user?.id;
 
   const fetchProfile = useCallback(async () => {
     if (!targetUserId) {
@@ -32,19 +33,39 @@ export function useProfile(userId?: string) {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", targetUserId)
-      .maybeSingle();
+    // Use profiles table for own profile (has email), public_profiles view for others
+    if (isOwnProfile && user) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", targetUserId)
+        .maybeSingle();
 
-    if (error) {
-      console.error("Error fetching profile:", error);
+      if (error) {
+        console.error("Error fetching profile:", error);
+      } else {
+        setProfile(data);
+      }
     } else {
-      setProfile(data);
+      // For viewing other users' profiles, use public_profiles (no email exposed)
+      const { data, error } = await supabase
+        .from("public_profiles" as any)
+        .select("*")
+        .eq("id", targetUserId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching public profile:", error);
+      } else if (data) {
+        // Cast to Profile type with email as null for public profiles
+        const publicData = data as unknown as Omit<Profile, 'email'>;
+        setProfile({ ...publicData, email: null });
+      } else {
+        setProfile(null);
+      }
     }
     setLoading(false);
-  }, [targetUserId]);
+  }, [targetUserId, isOwnProfile, user]);
 
   useEffect(() => {
     fetchProfile();
