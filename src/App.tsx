@@ -19,6 +19,7 @@ import Tutorials from "./pages/Tutorials";
 import TutorialPage from "./pages/TutorialPage";
 import CodeLibrary from "./pages/CodeLibrary";
 import Materials from "./pages/Materials";
+import Community from "./pages/Community";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBlogs from "./pages/admin/AdminBlogs";
 import AdminTutorials from "./pages/admin/AdminTutorials";
@@ -80,7 +81,7 @@ const App = () => (
               <Route path="/tutorials/:slug" element={<TutorialPage />} />
               <Route path="/code-library" element={<CodeLibrary />} />
               <Route path="/materials" element={<Materials />} />
-              
+              <Route path="/community" element={<Community />} />
               {/* Admin Routes */}
               <Route
                 path="/admin"
