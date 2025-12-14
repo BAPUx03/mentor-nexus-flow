@@ -96,9 +96,11 @@ export type Database = {
           author_id: string
           code: string
           created_at: string
+          custom_link: string | null
           description: string | null
           id: string
           language: string
+          preview_image: string | null
           published: boolean | null
           tags: string[] | null
           title: string
@@ -108,9 +110,11 @@ export type Database = {
           author_id: string
           code: string
           created_at?: string
+          custom_link?: string | null
           description?: string | null
           id?: string
           language?: string
+          preview_image?: string | null
           published?: boolean | null
           tags?: string[] | null
           title: string
@@ -120,9 +124,11 @@ export type Database = {
           author_id?: string
           code?: string
           created_at?: string
+          custom_link?: string | null
           description?: string | null
           id?: string
           language?: string
+          preview_image?: string | null
           published?: boolean | null
           tags?: string[] | null
           title?: string

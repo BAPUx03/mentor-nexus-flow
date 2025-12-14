@@ -12,6 +12,8 @@ export interface CodeSnippet {
   language: string;
   tags: string[];
   published: boolean;
+  preview_image: string | null;
+  custom_link: string | null;
   created_at: string;
   updated_at: string;
   author?: {
@@ -75,7 +77,7 @@ export function useCodeSnippetMutations() {
   const { toast } = useToast();
 
   const createSnippet = useMutation({
-    mutationFn: async (snippet: Omit<CodeSnippet, "id" | "author_id" | "created_at" | "updated_at" | "author" | "description"> & { description?: string }) => {
+    mutationFn: async (snippet: Omit<CodeSnippet, "id" | "author_id" | "created_at" | "updated_at" | "author" | "description" | "preview_image" | "custom_link"> & { description?: string; preview_image?: string; custom_link?: string }) => {
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase

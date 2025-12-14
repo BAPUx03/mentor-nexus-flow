@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CodePreview } from "./CodePreview";
+import { ImageUpload } from "./ImageUpload";
 import type { CodeSnippet } from "@/hooks/useCodeSnippets";
 
 const LANGUAGES = [
@@ -54,6 +55,8 @@ const snippetSchema = z.object({
   code: z.string().min(1, "Code is required"),
   language: z.string().min(1, "Language is required"),
   published: z.boolean(),
+  preview_image: z.string().optional(),
+  custom_link: z.string().url().optional().or(z.literal("")),
 });
 
 type SnippetFormData = z.infer<typeof snippetSchema>;
@@ -62,7 +65,7 @@ interface SnippetEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   snippet?: CodeSnippet | null;
-  onSave: (data: SnippetFormData & { tags: string[] }) => void;
+  onSave: (data: SnippetFormData & { tags: string[]; preview_image?: string; custom_link?: string }) => void;
   isLoading?: boolean;
 }
 
@@ -86,6 +89,8 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
       code: "",
       language: "javascript",
       published: false,
+      preview_image: "",
+      custom_link: "",
     },
   });
 
@@ -97,6 +102,8 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
         code: snippet.code,
         language: snippet.language,
         published: snippet.published,
+        preview_image: snippet.preview_image || "",
+        custom_link: snippet.custom_link || "",
       });
       setTags(snippet.tags || []);
       setCode(snippet.code);
@@ -107,6 +114,8 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
         code: "",
         language: "javascript",
         published: false,
+        preview_image: "",
+        custom_link: "",
       });
       setTags([]);
       setCode("");
@@ -180,6 +189,23 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
               {...register("description")}
               placeholder="What does this code do?"
               rows={2}
+            />
+          </div>
+
+          <ImageUpload
+            value={watch("preview_image") || ""}
+            onChange={(url) => setValue("preview_image", url)}
+            label="Preview Image"
+            folder="snippets"
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="custom_link">Live Demo URL (optional)</Label>
+            <Input
+              id="custom_link"
+              {...register("custom_link")}
+              placeholder="https://your-demo-link.com"
+              type="url"
             />
           </div>
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, Copy, Check, Bookmark, BookmarkCheck } from "lucide-react";
+import { User, Copy, Check, Bookmark, BookmarkCheck, ExternalLink } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -106,7 +106,16 @@ export default function CodeLibrary() {
         ) : snippets && snippets.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2">
             {snippets.map((snippet) => (
-              <Card key={snippet.id} className="flex flex-col">
+              <Card key={snippet.id} className="flex flex-col overflow-hidden">
+                {snippet.preview_image && (
+                  <div className="relative h-48 w-full overflow-hidden">
+                    <img
+                      src={snippet.preview_image}
+                      alt={snippet.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -117,7 +126,21 @@ export default function CodeLibrary() {
                         </p>
                       )}
                     </div>
-                    <Badge variant="outline">{snippet.language}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{snippet.language}</Badge>
+                      {snippet.custom_link && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          asChild
+                        >
+                          <a href={snippet.custom_link} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            Live
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col">
