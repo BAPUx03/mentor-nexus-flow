@@ -34,16 +34,16 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-muted/30">
+    <footer className="border-t border-border/50 bg-gradient-subtle">
       <div className="container mx-auto px-4 py-12 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-heading font-bold text-sm">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground font-heading font-bold text-sm shadow-glow group-hover:scale-105 transition-transform">
                 DL
               </div>
-              <span className="font-heading font-semibold text-lg text-foreground">
+              <span className="font-heading font-bold text-xl text-foreground">
                 DevLearn
               </span>
             </Link>

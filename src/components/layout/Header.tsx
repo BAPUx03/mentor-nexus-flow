@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Search, Sun, Moon, User, LogOut, Settings, Bookmark } from "lucide-react";
+import { Menu, X, Sun, Moon, User, LogOut, Settings, Bookmark, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,21 +12,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { SearchButton } from "@/components/search/SearchDialog";
 
 const navigation = [
   { name: "Home", href: "/" },
   { name: "Blogs", href: "/blogs" },
   { name: "Tutorials", href: "/tutorials" },
   { name: "Code Library", href: "/code-library" },
-  { name: "APIs", href: "/apis" },
-  { name: "Community", href: "/community" },
 ];
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -48,15 +47,15 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 glass">
       <nav className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-heading font-bold text-sm">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground font-heading font-bold text-sm shadow-glow group-hover:scale-105 transition-transform">
               DL
             </div>
-            <span className="font-heading font-semibold text-lg text-foreground hidden sm:block">
+            <span className="font-heading font-bold text-xl text-foreground hidden sm:block">
               DevLearn
             </span>
           </Link>
@@ -68,7 +67,7 @@ export function Header() {
             <Link
               key={item.name}
               to={item.href}
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
             >
               {item.name}
             </Link>
@@ -76,29 +75,10 @@ export function Header() {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Search */}
-          <div className="hidden md:flex items-center">
-            {searchOpen ? (
-              <div className="flex items-center gap-2 animate-fade-in">
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  className="w-64"
-                  autoFocus
-                  onBlur={() => setSearchOpen(false)}
-                />
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSearchOpen(true)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Search className="h-5 w-5" />
-              </Button>
-            )}
+          <div className="hidden md:block">
+            <SearchButton />
           </div>
 
           {/* Theme Toggle */}
@@ -106,7 +86,7 @@ export function Header() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             {resolvedTheme === "dark" ? (
               <Sun className="h-5 w-5" />
@@ -119,19 +99,19 @@ export function Header() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
                   <Avatar className="h-9 w-9">
                     <AvatarImage
                       src={user.user_metadata?.avatar_url}
                       alt={user.user_metadata?.full_name || user.email}
                     />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs font-semibold">
                       {getInitials(user.user_metadata?.full_name, user.email)}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-popover" align="end">
+              <DropdownMenuContent className="w-56" align="end">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-0.5 leading-none">
                     {user.user_metadata?.full_name && (
@@ -145,7 +125,7 @@ export function Header() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild>
                   <Link to="/dashboard" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     Dashboard
@@ -163,8 +143,19 @@ export function Header() {
                     Profile Settings
                   </Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>
@@ -175,7 +166,7 @@ export function Header() {
               <Button variant="ghost" asChild>
                 <Link to="/auth">Sign in</Link>
               </Button>
-              <Button asChild>
+              <Button className="bg-gradient-primary hover:opacity-90 transition-opacity" asChild>
                 <Link to="/auth?mode=signup">Get Started</Link>
               </Button>
             </div>
@@ -199,16 +190,11 @@ export function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-border bg-background animate-slide-down">
+        <div className="lg:hidden border-t border-border/50 bg-background animate-slide-down">
           <div className="container mx-auto px-4 py-4 space-y-3">
             {/* Mobile Search */}
-            <div className="relative md:hidden">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="pl-10"
-              />
+            <div className="md:hidden">
+              <SearchButton className="w-full" />
             </div>
 
             {/* Mobile Navigation */}
@@ -217,7 +203,7 @@ export function Header() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                  className="px-3 py-2.5 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}
@@ -233,7 +219,7 @@ export function Header() {
                     Sign in
                   </Link>
                 </Button>
-                <Button asChild className="w-full">
+                <Button className="w-full bg-gradient-primary" asChild>
                   <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)}>
                     Get Started
                   </Link>
