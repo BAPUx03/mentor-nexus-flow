@@ -13,12 +13,27 @@ export interface Material {
   thumbnail_url: string | null;
   is_paid: boolean;
   price: number;
-  upi_id: string | null;
-  qr_code_url: string | null;
+  upi_id: string | null;  // Only available when user initiates purchase
+  qr_code_url: string | null;  // Only available when user initiates purchase
   author_id: string;
   published: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// Fetch payment details for a specific material (only when needed for purchase)
+export async function fetchMaterialPaymentDetails(materialId: string): Promise<{ upi_id: string | null; qr_code_url: string | null } | null> {
+  const { data, error } = await supabase
+    .from("materials")
+    .select("upi_id, qr_code_url")
+    .eq("id", materialId)
+    .single();
+  
+  if (error) {
+    console.error("Error fetching payment details:", error);
+    return null;
+  }
+  return data;
 }
 
 export interface MaterialPurchase {
@@ -39,13 +54,17 @@ export interface MaterialPurchase {
   };
 }
 
+// Public fields that can be shown to all users (excludes payment info)
+const PUBLIC_MATERIAL_FIELDS = "id, title, description, category, external_link, thumbnail_url, is_paid, price, author_id, published, created_at, updated_at";
+
 export function useMaterials(category?: MaterialCategory) {
   return useQuery({
     queryKey: ["materials", category],
     queryFn: async () => {
+      // Only select public fields, exclude payment info (upi_id, qr_code_url)
       let query = supabase
         .from("materials")
-        .select("*")
+        .select(PUBLIC_MATERIAL_FIELDS)
         .eq("published", true)
         .order("created_at", { ascending: false });
 
@@ -55,7 +74,12 @@ export function useMaterials(category?: MaterialCategory) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Material[];
+      // Cast with null values for excluded fields
+      return (data as any[]).map(m => ({
+        ...m,
+        upi_id: null,
+        qr_code_url: null,
+      })) as Material[];
     },
   });
 }
