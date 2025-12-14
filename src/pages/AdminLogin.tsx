@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 
 // Set this to false to hide signup option
-const ALLOW_ADMIN_SIGNUP = true;
+const ALLOW_ADMIN_SIGNUP = false;
 
 export default function AdminLogin() {
   const { user, loading: authLoading, signIn, signUp } = useAuth();
