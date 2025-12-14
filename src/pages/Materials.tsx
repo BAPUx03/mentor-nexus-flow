@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Video, Image, Palette, Smartphone, Package, Lock, ExternalLink, CreditCard } from "lucide-react";
+import { Video, Image, Palette, Smartphone, Package, Lock, ExternalLink, CreditCard, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMaterials, useUserPurchases, useMaterialMutations, MaterialCategory, Material } from "@/hooks/useMaterials";
+import { useMaterials, useUserPurchases, useMaterialMutations, MaterialCategory, Material, fetchMaterialPaymentDetails } from "@/hooks/useMaterials";
 import { useAuth } from "@/contexts/AuthContext";
 
 const categoryIcons: Record<MaterialCategory, React.ReactNode> = {
@@ -33,6 +33,24 @@ export default function Materials() {
   const [selectedCategory, setSelectedCategory] = useState<MaterialCategory | "all">("all");
   const [purchaseModal, setPurchaseModal] = useState<Material | null>(null);
   const [transactionId, setTransactionId] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState<{ upi_id: string | null; qr_code_url: string | null } | null>(null);
+  const [loadingPaymentDetails, setLoadingPaymentDetails] = useState(false);
+
+  // Fetch payment details only when purchase modal opens
+  useEffect(() => {
+    if (purchaseModal && user) {
+      setLoadingPaymentDetails(true);
+      fetchMaterialPaymentDetails(purchaseModal.id)
+        .then(details => {
+          setPaymentDetails(details);
+        })
+        .finally(() => {
+          setLoadingPaymentDetails(false);
+        });
+    } else {
+      setPaymentDetails(null);
+    }
+  }, [purchaseModal, user]);
 
   const { data: materials = [], isLoading } = useMaterials(selectedCategory === "all" ? undefined : selectedCategory);
   const { data: purchases = [] } = useUserPurchases();
@@ -185,24 +203,33 @@ export default function Materials() {
                 <div className="text-center p-6 bg-muted rounded-lg">
                   <p className="text-3xl font-bold text-primary mb-2">₹{purchaseModal.price}</p>
                   
-                  {purchaseModal.upi_id && (
-                    <div className="mt-4">
-                      <p className="text-sm text-muted-foreground mb-2">Pay via UPI:</p>
-                      <p className="font-mono text-lg bg-background px-4 py-2 rounded inline-block">
-                        {purchaseModal.upi_id}
-                      </p>
+                  {loadingPaymentDetails ? (
+                    <div className="mt-4 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-muted-foreground">Loading payment details...</span>
                     </div>
-                  )}
+                  ) : (
+                    <>
+                      {paymentDetails?.upi_id && (
+                        <div className="mt-4">
+                          <p className="text-sm text-muted-foreground mb-2">Pay via UPI:</p>
+                          <p className="font-mono text-lg bg-background px-4 py-2 rounded inline-block">
+                            {paymentDetails.upi_id}
+                          </p>
+                        </div>
+                      )}
 
-                  {purchaseModal.qr_code_url && (
-                    <div className="mt-4">
-                      <p className="text-sm text-muted-foreground mb-2">Or scan QR code:</p>
-                      <img
-                        src={purchaseModal.qr_code_url}
-                        alt="Payment QR Code"
-                        className="mx-auto w-48 h-48 rounded-lg border"
-                      />
-                    </div>
+                      {paymentDetails?.qr_code_url && (
+                        <div className="mt-4">
+                          <p className="text-sm text-muted-foreground mb-2">Or scan QR code:</p>
+                          <img
+                            src={paymentDetails.qr_code_url}
+                            alt="Payment QR Code"
+                            className="mx-auto w-48 h-48 rounded-lg border"
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 

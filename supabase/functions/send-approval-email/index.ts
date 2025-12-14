@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
 
@@ -19,9 +20,87 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, materialTitle }: ApprovalEmailRequest = await req.json();
+    // 1. Extract and verify JWT
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    console.log(`Sending approval email to ${email} for material: ${materialTitle}`);
+    // 2. Create Supabase client with user's JWT
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Missing Supabase configuration");
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // 3. Verify user authentication
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error("Invalid authentication:", userError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 4. Check if user has admin role using the has_role function
+    const { data: hasAdminRole, error: roleError } = await supabase
+      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    
+    const { data: hasSuperAdminRole } = await supabase
+      .rpc('has_role', { _user_id: user.id, _role: 'super_admin' });
+
+    if (roleError || (!hasAdminRole && !hasSuperAdminRole)) {
+      console.error("Unauthorized - admin access required for user:", user.id);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 5. Validate input
+    const { email, materialTitle }: ApprovalEmailRequest = await req.json();
+    
+    if (!email || typeof email !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email address' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!materialTitle || typeof materialTitle !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid material title' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Sanitize materialTitle to prevent injection
+    const sanitizedTitle = materialTitle.replace(/[<>]/g, '').substring(0, 200);
+
+    console.log(`Admin ${user.id} sending approval email to ${email} for material: ${sanitizedTitle}`);
 
     if (!BREVO_API_KEY) {
       throw new Error("BREVO_API_KEY is not configured");
@@ -40,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: "noreply@devlearn.com",
         },
         to: [{ email }],
-        subject: `Access Granted: ${materialTitle}`,
+        subject: `Access Granted: ${sanitizedTitle}`,
         htmlContent: `
           <!DOCTYPE html>
           <html>
@@ -60,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <h1>🎉 Payment Approved!</h1>
               </div>
               <div class="content">
-                <p>Great news! Your payment for <strong>${materialTitle}</strong> has been verified and approved.</p>
+                <p>Great news! Your payment for <strong>${sanitizedTitle}</strong> has been verified and approved.</p>
                 <p>You now have full access to this resource. Visit the Materials page to access your purchase.</p>
                 <a href="https://devlearn.app/materials" class="button">Access Your Material</a>
                 <p style="margin-top: 30px;">Thank you for your purchase!</p>
@@ -91,7 +170,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-approval-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Failed to send email" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
