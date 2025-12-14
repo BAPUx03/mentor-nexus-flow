@@ -31,6 +31,10 @@ interface MaterialForm {
   published: boolean;
 }
 
+// Fixed payment details
+const FIXED_UPI_ID = "makwanabapu@fam";
+const FIXED_QR_CODE_URL = "/images/payment-qr.jpg";
+
 const defaultForm: MaterialForm = {
   title: "",
   description: "",
@@ -39,8 +43,8 @@ const defaultForm: MaterialForm = {
   thumbnail_url: "",
   is_paid: false,
   price: 0,
-  upi_id: "",
-  qr_code_url: "",
+  upi_id: FIXED_UPI_ID,
+  qr_code_url: FIXED_QR_CODE_URL,
   published: false,
 };
 
