@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminProtectedRoute } from "@/components/auth/AdminProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminLogin from "./pages/AdminLogin";
@@ -91,65 +92,65 @@ const App = () => (
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminDashboard />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               <Route
                 path="/admin/blogs"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminBlogs />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               <Route
                 path="/admin/tutorials"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminTutorials />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               <Route
                 path="/admin/snippets"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminSnippets />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               <Route
                 path="/admin/materials"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminMaterials />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               <Route
                 path="/admin/users"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminUsers />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               <Route
                 path="/admin/analytics"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminAnalytics />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               <Route
                 path="/admin/community"
                 element={
-                  <ProtectedRoute>
+                  <AdminProtectedRoute>
                     <AdminCommunity />
-                  </ProtectedRoute>
+                  </AdminProtectedRoute>
                 }
               />
               

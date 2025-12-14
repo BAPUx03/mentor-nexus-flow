@@ -11,7 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMaterials, useUserPurchases, useMaterialMutations, MaterialCategory, Material, fetchMaterialPaymentDetails } from "@/hooks/useMaterials";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 
+// Validation schema for transaction ID
+const transactionIdSchema = z.string()
+  .min(5, "Transaction ID must be at least 5 characters")
+  .max(50, "Transaction ID must be less than 50 characters")
+  .regex(/^[A-Z0-9]+$/i, "Transaction ID must be alphanumeric");
 const categoryIcons: Record<MaterialCategory, React.ReactNode> = {
   editing: <Palette className="h-5 w-5" />,
   video: <Video className="h-5 w-5" />,
@@ -64,9 +71,24 @@ export default function Materials() {
     return purchases.some(p => p.material_id === materialId && p.status === "pending");
   };
 
+  const { toast } = useToast();
+
   const handlePurchase = () => {
-    if (!purchaseModal || !transactionId.trim()) return;
-    submitPurchase({ materialId: purchaseModal.id, transactionId: transactionId.trim() });
+    if (!purchaseModal) return;
+    
+    const trimmedId = transactionId.trim();
+    const validation = transactionIdSchema.safeParse(trimmedId);
+    
+    if (!validation.success) {
+      toast({
+        title: "Invalid Transaction ID",
+        description: validation.error.errors[0].message,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    submitPurchase({ materialId: purchaseModal.id, transactionId: validation.data });
     setPurchaseModal(null);
     setTransactionId("");
   };
