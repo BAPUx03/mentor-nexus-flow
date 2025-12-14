@@ -74,7 +74,7 @@ export function useBlogPostMutations() {
   const { toast } = useToast();
 
   const createPost = useMutation({
-    mutationFn: async (post: Omit<BlogPost, "id" | "author_id" | "created_at" | "updated_at" | "author">) => {
+    mutationFn: async (post: Omit<BlogPost, "id" | "author_id" | "created_at" | "updated_at" | "author" | "published_at" | "excerpt" | "featured_image"> & { excerpt?: string; featured_image?: string }) => {
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase

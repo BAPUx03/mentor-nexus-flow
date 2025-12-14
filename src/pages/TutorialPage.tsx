@@ -27,12 +27,12 @@ export default function TutorialPage() {
 
   const isSaved = tutorial ? isItemSaved(tutorial.id, "tutorial") : false;
 
-  const handleSaveToggle = () => {
+  const handleSaveToggle = async () => {
     if (!tutorial) return;
     if (isSaved) {
-      unsaveItem.mutate({ itemId: tutorial.id, itemType: "tutorial" });
+      await unsaveItem(tutorial.id, "tutorial");
     } else {
-      saveItem.mutate({ itemId: tutorial.id, itemType: "tutorial" });
+      await saveItem(tutorial.id, "tutorial");
     }
   };
 

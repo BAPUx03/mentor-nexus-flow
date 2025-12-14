@@ -75,7 +75,7 @@ export function useCodeSnippetMutations() {
   const { toast } = useToast();
 
   const createSnippet = useMutation({
-    mutationFn: async (snippet: Omit<CodeSnippet, "id" | "author_id" | "created_at" | "updated_at" | "author">) => {
+    mutationFn: async (snippet: Omit<CodeSnippet, "id" | "author_id" | "created_at" | "updated_at" | "author" | "description"> & { description?: string }) => {
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase

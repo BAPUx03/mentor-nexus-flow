@@ -32,7 +32,7 @@ interface AdminLayoutProps {
 export function AdminLayout({ children, title, description }: AdminLayoutProps) {
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isSuperAdmin, isLoading: roleLoading } = useUserRole();
+  const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
 
   if (authLoading || roleLoading) {
     return (

@@ -13,6 +13,15 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Library from "./pages/Library";
 import PublicProfile from "./pages/PublicProfile";
+import Blogs from "./pages/Blogs";
+import BlogPost from "./pages/BlogPost";
+import Tutorials from "./pages/Tutorials";
+import TutorialPage from "./pages/TutorialPage";
+import CodeLibrary from "./pages/CodeLibrary";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminBlogs from "./pages/admin/AdminBlogs";
+import AdminTutorials from "./pages/admin/AdminTutorials";
+import AdminSnippets from "./pages/admin/AdminSnippets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +70,48 @@ const App = () => (
                 }
               />
               <Route path="/user/:userId" element={<PublicProfile />} />
+              
+              {/* Public Content Routes */}
+              <Route path="/blogs" element={<Blogs />} />
+              <Route path="/blogs/:slug" element={<BlogPost />} />
+              <Route path="/tutorials" element={<Tutorials />} />
+              <Route path="/tutorials/:slug" element={<TutorialPage />} />
+              <Route path="/code-library" element={<CodeLibrary />} />
+              
+              {/* Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/blogs"
+                element={
+                  <ProtectedRoute>
+                    <AdminBlogs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/tutorials"
+                element={
+                  <ProtectedRoute>
+                    <AdminTutorials />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/snippets"
+                element={
+                  <ProtectedRoute>
+                    <AdminSnippets />
+                  </ProtectedRoute>
+                }
+              />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

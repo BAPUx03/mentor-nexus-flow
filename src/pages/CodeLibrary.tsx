@@ -53,11 +53,11 @@ export default function CodeLibrary() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSaveToggle = (snippetId: string) => {
-    if (isItemSaved(snippetId, "snippet")) {
-      unsaveItem.mutate({ itemId: snippetId, itemType: "snippet" });
+  const handleSaveToggle = async (snippetId: string) => {
+    if (isItemSaved(snippetId, "code_snippet")) {
+      await unsaveItem(snippetId, "code_snippet");
     } else {
-      saveItem.mutate({ itemId: snippetId, itemType: "snippet" });
+      await saveItem(snippetId, "code_snippet");
     }
   };
 
@@ -160,7 +160,7 @@ export default function CodeLibrary() {
                         size="sm"
                         onClick={() => handleSaveToggle(snippet.id)}
                       >
-                        {isItemSaved(snippet.id, "snippet") ? (
+                        {isItemSaved(snippet.id, "code_snippet") ? (
                           <BookmarkCheck className="h-4 w-4 text-primary" />
                         ) : (
                           <Bookmark className="h-4 w-4" />

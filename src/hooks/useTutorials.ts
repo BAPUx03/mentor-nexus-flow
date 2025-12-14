@@ -100,7 +100,7 @@ export function useTutorialMutations() {
   const { toast } = useToast();
 
   const createTutorial = useMutation({
-    mutationFn: async (tutorial: Omit<Tutorial, "id" | "author_id" | "created_at" | "updated_at" | "author" | "steps">) => {
+    mutationFn: async (tutorial: Omit<Tutorial, "id" | "author_id" | "created_at" | "updated_at" | "author" | "steps" | "published_at" | "description" | "featured_image"> & { description?: string; featured_image?: string }) => {
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase

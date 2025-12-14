@@ -18,12 +18,12 @@ export default function BlogPost() {
 
   const isSaved = blog ? isItemSaved(blog.id, "blog") : false;
 
-  const handleSaveToggle = () => {
+  const handleSaveToggle = async () => {
     if (!blog) return;
     if (isSaved) {
-      unsaveItem.mutate({ itemId: blog.id, itemType: "blog" });
+      await unsaveItem(blog.id, "blog");
     } else {
-      saveItem.mutate({ itemId: blog.id, itemType: "blog" });
+      await saveItem(blog.id, "blog");
     }
   };
 
