@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImageUpload } from "./ImageUpload";
 import type { BlogPost } from "@/hooks/useBlogPosts";
 
 const blogSchema = z.object({
@@ -22,7 +23,7 @@ const blogSchema = z.object({
   slug: z.string().min(1, "Slug is required").max(200).regex(/^[a-z0-9-]+$/, "Slug must be lowercase with hyphens"),
   excerpt: z.string().max(500).optional(),
   content: z.string().min(1, "Content is required"),
-  featured_image: z.string().url().optional().or(z.literal("")),
+  featured_image: z.string().optional().or(z.literal("")),
   published: z.boolean(),
 });
 
@@ -39,6 +40,7 @@ interface BlogEditorProps {
 export function BlogEditor({ open, onOpenChange, post, onSave, isLoading }: BlogEditorProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [featuredImage, setFeaturedImage] = useState("");
 
   const {
     register,
@@ -72,6 +74,7 @@ export function BlogEditor({ open, onOpenChange, post, onSave, isLoading }: Blog
         published: post.published,
       });
       setTags(post.tags || []);
+      setFeaturedImage(post.featured_image || "");
     } else {
       reset({
         title: "",
@@ -82,6 +85,7 @@ export function BlogEditor({ open, onOpenChange, post, onSave, isLoading }: Blog
         published: false,
       });
       setTags([]);
+      setFeaturedImage("");
     }
   }, [post, reset]);
 
@@ -109,8 +113,13 @@ export function BlogEditor({ open, onOpenChange, post, onSave, isLoading }: Blog
     setTags(tags.filter((t) => t !== tagToRemove));
   };
 
+  const handleImageChange = (url: string) => {
+    setFeaturedImage(url);
+    setValue("featured_image", url);
+  };
+
   const onSubmit = (data: BlogFormData) => {
-    onSave({ ...data, tags, featured_image: data.featured_image || undefined });
+    onSave({ ...data, tags, featured_image: featuredImage || undefined });
   };
 
   return (
@@ -165,14 +174,12 @@ export function BlogEditor({ open, onOpenChange, post, onSave, isLoading }: Blog
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="featured_image">Featured Image URL</Label>
-            <Input
-              id="featured_image"
-              {...register("featured_image")}
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
+          <ImageUpload
+            value={featuredImage}
+            onChange={handleImageChange}
+            label="Featured Image"
+            folder="blogs"
+          />
 
           <div className="space-y-2">
             <Label>Tags</Label>

@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import { useAdminMaterials, usePendingPurchases, useMaterialMutations, MaterialCategory } from "@/hooks/useMaterials";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -304,14 +305,12 @@ export default function AdminMaterials() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Thumbnail URL</Label>
-                <Input
-                  value={form.thumbnail_url}
-                  onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
+              <ImageUpload
+                value={form.thumbnail_url}
+                onChange={(url) => setForm({ ...form, thumbnail_url: url })}
+                label="Thumbnail Image"
+                folder="materials"
+              />
 
               <div className="flex items-center space-x-2">
                 <Switch
@@ -340,12 +339,15 @@ export default function AdminMaterials() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>QR Code URL</Label>
-                    <Input
-                      value={form.qr_code_url}
-                      onChange={(e) => setForm({ ...form, qr_code_url: e.target.value })}
-                      placeholder="https://..."
-                    />
+                    <Label>QR Code</Label>
+                    <div className="flex items-center gap-4">
+                      <img 
+                        src={form.qr_code_url} 
+                        alt="Payment QR" 
+                        className="w-24 h-24 object-contain border rounded-lg"
+                      />
+                      <span className="text-sm text-muted-foreground">Fixed QR code for all payments</span>
+                    </div>
                   </div>
                 </div>
               )}

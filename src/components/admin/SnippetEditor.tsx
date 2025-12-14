@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CodePreview } from "./CodePreview";
 import type { CodeSnippet } from "@/hooks/useCodeSnippets";
 
 const LANGUAGES = [
@@ -68,6 +69,7 @@ interface SnippetEditorProps {
 export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }: SnippetEditorProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [code, setCode] = useState("");
 
   const {
     register,
@@ -97,6 +99,7 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
         published: snippet.published,
       });
       setTags(snippet.tags || []);
+      setCode(snippet.code);
     } else {
       reset({
         title: "",
@@ -106,6 +109,7 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
         published: false,
       });
       setTags([]);
+      setCode("");
     }
   }, [snippet, reset]);
 
@@ -121,8 +125,13 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
     setTags(tags.filter((t) => t !== tagToRemove));
   };
 
+  const handleCodeChange = (value: string) => {
+    setCode(value);
+    setValue("code", value);
+  };
+
   const onSubmit = (data: SnippetFormData) => {
-    onSave({ ...data, tags });
+    onSave({ ...data, code, tags });
   };
 
   return (
@@ -174,19 +183,16 @@ export function SnippetEditor({ open, onOpenChange, snippet, onSave, isLoading }
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="code">Code</Label>
-            <Textarea
-              id="code"
-              {...register("code")}
-              placeholder="// Paste your code here..."
-              rows={12}
-              className="font-mono text-sm"
-            />
-            {errors.code && (
-              <p className="text-sm text-destructive">{errors.code.message}</p>
-            )}
-          </div>
+          <CodePreview
+            value={code}
+            onChange={handleCodeChange}
+            label="Code"
+            placeholder="// Paste your code here..."
+            rows={12}
+          />
+          {errors.code && (
+            <p className="text-sm text-destructive">{errors.code.message}</p>
+          )}
 
           <div className="space-y-2">
             <Label>Tags</Label>

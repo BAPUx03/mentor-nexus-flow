@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Plus, GripVertical, Trash2 } from "lucide-react";
+import { X, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +23,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageUpload } from "./ImageUpload";
+import { CodePreview } from "./CodePreview";
 import type { Tutorial, TutorialStep } from "@/hooks/useTutorials";
 
 const tutorialSchema = z.object({
@@ -31,7 +33,7 @@ const tutorialSchema = z.object({
   description: z.string().max(1000).optional(),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]),
   estimated_minutes: z.coerce.number().min(1).max(600),
-  featured_image: z.string().url().optional().or(z.literal("")),
+  featured_image: z.string().optional().or(z.literal("")),
   published: z.boolean(),
 });
 
@@ -56,6 +58,7 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [steps, setSteps] = useState<StepData[]>([]);
+  const [featuredImage, setFeaturedImage] = useState("");
 
   const {
     register,
@@ -91,6 +94,7 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
         published: tutorial.published,
       });
       setTags(tutorial.tags || []);
+      setFeaturedImage(tutorial.featured_image || "");
       setSteps(
         tutorial.steps?.map((s) => ({
           id: s.id,
@@ -110,6 +114,7 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
         published: false,
       });
       setTags([]);
+      setFeaturedImage("");
       setSteps([]);
     }
   }, [tutorial, reset]);
@@ -151,8 +156,13 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
     setSteps(steps.filter((_, i) => i !== index));
   };
 
+  const handleImageChange = (url: string) => {
+    setFeaturedImage(url);
+    setValue("featured_image", url);
+  };
+
   const onSubmit = (data: TutorialFormData) => {
-    onSave({ ...data, tags, featured_image: data.featured_image || undefined }, steps);
+    onSave({ ...data, tags, featured_image: featuredImage || undefined }, steps);
   };
 
   return (
@@ -221,16 +231,14 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
                 max={600}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="featured_image">Featured Image URL</Label>
-              <Input
-                id="featured_image"
-                {...register("featured_image")}
-                placeholder="https://..."
-              />
-            </div>
           </div>
+
+          <ImageUpload
+            value={featuredImage}
+            onChange={handleImageChange}
+            label="Featured Image"
+            folder="tutorials"
+          />
 
           <div className="space-y-2">
             <Label>Tags</Label>
@@ -309,16 +317,13 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Code Example (optional)</Label>
-                    <Textarea
-                      value={step.code_example}
-                      onChange={(e) => updateStep(index, "code_example", e.target.value)}
-                      placeholder="// Code example..."
-                      rows={4}
-                      className="font-mono text-sm"
-                    />
-                  </div>
+                  <CodePreview
+                    value={step.code_example}
+                    onChange={(value) => updateStep(index, "code_example", value)}
+                    label="Code Example (optional)"
+                    placeholder="// Code example..."
+                    rows={6}
+                  />
                 </CardContent>
               </Card>
             ))}
