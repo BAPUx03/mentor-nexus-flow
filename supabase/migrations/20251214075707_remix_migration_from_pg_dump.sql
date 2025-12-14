@@ -128,6 +128,64 @@ CREATE TABLE public.code_snippets (
 
 
 --
+-- Name: comments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.comments (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    content_type text NOT NULL,
+    content_id uuid NOT NULL,
+    comment_text text NOT NULL,
+    parent_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT comments_content_type_check CHECK ((content_type = ANY (ARRAY['blog'::text, 'tutorial'::text])))
+);
+
+
+--
+-- Name: material_purchases; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.material_purchases (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    material_id uuid NOT NULL,
+    transaction_id text NOT NULL,
+    status text DEFAULT 'pending'::text NOT NULL,
+    admin_notes text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    approved_at timestamp with time zone,
+    approved_by uuid,
+    CONSTRAINT material_purchases_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
+);
+
+
+--
+-- Name: materials; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.materials (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    title text NOT NULL,
+    description text,
+    category text NOT NULL,
+    external_link text NOT NULL,
+    thumbnail_url text,
+    is_paid boolean DEFAULT false NOT NULL,
+    price numeric(10,2) DEFAULT 0,
+    upi_id text,
+    qr_code_url text,
+    author_id uuid NOT NULL,
+    published boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT materials_category_check CHECK ((category = ANY (ARRAY['editing'::text, 'video'::text, 'graphics'::text, 'apps'::text, 'other'::text])))
+);
+
+
+--
 -- Name: profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -238,6 +296,30 @@ ALTER TABLE ONLY public.code_snippets
 
 
 --
+-- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: material_purchases material_purchases_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.material_purchases
+    ADD CONSTRAINT material_purchases_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: materials materials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -310,6 +392,34 @@ ALTER TABLE ONLY public.user_roles
 
 
 --
+-- Name: idx_comments_content; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_comments_content ON public.comments USING btree (content_type, content_id);
+
+
+--
+-- Name: idx_comments_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_comments_user ON public.comments USING btree (user_id);
+
+
+--
+-- Name: idx_material_purchases_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_material_purchases_status ON public.material_purchases USING btree (status);
+
+
+--
+-- Name: idx_materials_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_materials_category ON public.materials USING btree (category);
+
+
+--
 -- Name: blog_posts update_blog_posts_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -321,6 +431,20 @@ CREATE TRIGGER update_blog_posts_updated_at BEFORE UPDATE ON public.blog_posts F
 --
 
 CREATE TRIGGER update_code_snippets_updated_at BEFORE UPDATE ON public.code_snippets FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: comments update_comments_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON public.comments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: materials update_materials_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_materials_updated_at BEFORE UPDATE ON public.materials FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
@@ -358,6 +482,38 @@ ALTER TABLE ONLY public.blog_posts
 
 ALTER TABLE ONLY public.code_snippets
     ADD CONSTRAINT code_snippets_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: comments comments_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.comments(id) ON DELETE CASCADE;
+
+
+--
+-- Name: comments comments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: material_purchases material_purchases_material_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.material_purchases
+    ADD CONSTRAINT material_purchases_material_id_fkey FOREIGN KEY (material_id) REFERENCES public.materials(id) ON DELETE CASCADE;
+
+
+--
+-- Name: material_purchases material_purchases_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.material_purchases
+    ADD CONSTRAINT material_purchases_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --
@@ -408,6 +564,20 @@ CREATE POLICY "Admins can manage all blogs" ON public.blog_posts USING ((public.
 
 
 --
+-- Name: comments Admins can manage all comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage all comments" ON public.comments USING ((public.has_role(auth.uid(), 'admin'::text) OR public.has_role(auth.uid(), 'super_admin'::text)));
+
+
+--
+-- Name: materials Admins can manage all materials; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage all materials" ON public.materials USING ((public.has_role(auth.uid(), 'admin'::text) OR public.has_role(auth.uid(), 'super_admin'::text)));
+
+
+--
 -- Name: code_snippets Admins can manage all snippets; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -429,12 +599,40 @@ CREATE POLICY "Admins can manage all tutorials" ON public.tutorials USING ((publ
 
 
 --
+-- Name: material_purchases Admins can update purchases; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can update purchases" ON public.material_purchases FOR UPDATE USING ((public.has_role(auth.uid(), 'admin'::text) OR public.has_role(auth.uid(), 'super_admin'::text)));
+
+
+--
+-- Name: material_purchases Admins can view all purchases; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view all purchases" ON public.material_purchases FOR SELECT USING ((public.has_role(auth.uid(), 'admin'::text) OR public.has_role(auth.uid(), 'super_admin'::text)));
+
+
+--
 -- Name: user_roles Admins can view all roles; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Admins can view all roles" ON public.user_roles FOR SELECT USING ((EXISTS ( SELECT 1
    FROM public.user_roles user_roles_1
   WHERE ((user_roles_1.user_id = auth.uid()) AND (user_roles_1.role = ANY (ARRAY['admin'::text, 'super_admin'::text]))))));
+
+
+--
+-- Name: comments Anyone can view comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view comments" ON public.comments FOR SELECT USING (true);
+
+
+--
+-- Name: comments Authenticated users can create comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Authenticated users can create comments" ON public.comments FOR INSERT WITH CHECK ((auth.uid() = user_id));
 
 
 --
@@ -517,6 +715,13 @@ CREATE POLICY "Authors can view their own blogs" ON public.blog_posts FOR SELECT
 
 
 --
+-- Name: materials Authors can view their own materials; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Authors can view their own materials" ON public.materials FOR SELECT USING ((auth.uid() = author_id));
+
+
+--
 -- Name: code_snippets Authors can view their own snippets; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -554,6 +759,13 @@ CREATE POLICY "Published blogs are viewable by everyone" ON public.blog_posts FO
 
 
 --
+-- Name: materials Published materials are viewable by everyone; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Published materials are viewable by everyone" ON public.materials FOR SELECT USING ((published = true));
+
+
+--
 -- Name: code_snippets Published snippets are viewable by everyone; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -586,6 +798,20 @@ CREATE POLICY "Super admins can manage roles" ON public.user_roles USING ((EXIST
 
 
 --
+-- Name: material_purchases Users can create purchases; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can create purchases" ON public.material_purchases FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: comments Users can delete their own comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can delete their own comments" ON public.comments FOR DELETE USING ((auth.uid() = user_id));
+
+
+--
 -- Name: saved_items Users can delete their own saved items; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -607,6 +833,13 @@ CREATE POLICY "Users can save items" ON public.saved_items FOR INSERT WITH CHECK
 
 
 --
+-- Name: comments Users can update their own comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update their own comments" ON public.comments FOR UPDATE USING ((auth.uid() = user_id));
+
+
+--
 -- Name: profiles Users can update their own profile; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -618,6 +851,13 @@ CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE
 --
 
 CREATE POLICY "Users can view their own profile" ON public.profiles FOR SELECT USING ((auth.uid() = id));
+
+
+--
+-- Name: material_purchases Users can view their own purchases; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view their own purchases" ON public.material_purchases FOR SELECT USING ((auth.uid() = user_id));
 
 
 --
@@ -645,6 +885,24 @@ ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.code_snippets ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: comments; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: material_purchases; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.material_purchases ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: materials; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: -
