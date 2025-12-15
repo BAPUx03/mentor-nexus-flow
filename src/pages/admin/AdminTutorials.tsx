@@ -56,7 +56,7 @@ export default function AdminTutorials() {
   };
 
   const handleSave = async (
-    data: { title: string; slug: string; description?: string; difficulty: "beginner" | "intermediate" | "advanced"; estimated_minutes: number; featured_image?: string; published: boolean; tags: string[] },
+    data: { title: string; slug: string; description?: string; difficulty: "beginner" | "intermediate" | "advanced"; estimated_minutes: number; featured_image?: string; external_link?: string; is_paid: boolean; price?: number; upi_id?: string; qr_code_url?: string; published: boolean; tags: string[] },
     steps: { title: string; content: string; code_example: string }[]
   ) => {
     if (selectedTutorial) {

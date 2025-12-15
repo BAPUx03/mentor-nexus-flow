@@ -467,14 +467,19 @@ export type Database = {
           description: string | null
           difficulty: string
           estimated_minutes: number | null
+          external_link: string | null
           featured_image: string | null
           id: string
+          is_paid: boolean | null
+          price: number | null
           published: boolean | null
           published_at: string | null
+          qr_code_url: string | null
           slug: string
           tags: string[] | null
           title: string
           updated_at: string
+          upi_id: string | null
         }
         Insert: {
           author_id: string
@@ -482,14 +487,19 @@ export type Database = {
           description?: string | null
           difficulty?: string
           estimated_minutes?: number | null
+          external_link?: string | null
           featured_image?: string | null
           id?: string
+          is_paid?: boolean | null
+          price?: number | null
           published?: boolean | null
           published_at?: string | null
+          qr_code_url?: string | null
           slug: string
           tags?: string[] | null
           title: string
           updated_at?: string
+          upi_id?: string | null
         }
         Update: {
           author_id?: string
@@ -497,14 +507,19 @@ export type Database = {
           description?: string | null
           difficulty?: string
           estimated_minutes?: number | null
+          external_link?: string | null
           featured_image?: string | null
           id?: string
+          is_paid?: boolean | null
+          price?: number | null
           published?: boolean | null
           published_at?: string | null
+          qr_code_url?: string | null
           slug?: string
           tags?: string[] | null
           title?: string
           updated_at?: string
+          upi_id?: string | null
         }
         Relationships: [
           {

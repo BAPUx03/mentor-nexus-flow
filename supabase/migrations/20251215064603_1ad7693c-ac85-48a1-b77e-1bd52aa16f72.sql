@@ -1,0 +1,7 @@
+-- Add external link and payment fields to tutorials table
+ALTER TABLE public.tutorials
+ADD COLUMN IF NOT EXISTS external_link TEXT,
+ADD COLUMN IF NOT EXISTS is_paid BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS upi_id TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS qr_code_url TEXT DEFAULT NULL;

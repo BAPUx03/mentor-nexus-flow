@@ -28,6 +28,11 @@ export interface Tutorial {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  external_link: string | null;
+  is_paid: boolean;
+  price: number | null;
+  upi_id: string | null;
+  qr_code_url: string | null;
   author?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -100,7 +105,7 @@ export function useTutorialMutations() {
   const { toast } = useToast();
 
   const createTutorial = useMutation({
-    mutationFn: async (tutorial: Omit<Tutorial, "id" | "author_id" | "created_at" | "updated_at" | "author" | "steps" | "published_at" | "description" | "featured_image"> & { description?: string; featured_image?: string }) => {
+    mutationFn: async (tutorial: { title: string; slug: string; description?: string; difficulty: string; estimated_minutes: number; featured_image?: string; tags: string[]; published: boolean; external_link?: string; is_paid: boolean; price?: number; upi_id?: string; qr_code_url?: string }) => {
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase

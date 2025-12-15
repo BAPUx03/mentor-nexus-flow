@@ -34,6 +34,11 @@ const tutorialSchema = z.object({
   difficulty: z.enum(["beginner", "intermediate", "advanced"]),
   estimated_minutes: z.coerce.number().min(1).max(600),
   featured_image: z.string().optional().or(z.literal("")),
+  external_link: z.string().optional().or(z.literal("")),
+  is_paid: z.boolean(),
+  price: z.coerce.number().min(0).optional(),
+  upi_id: z.string().optional().or(z.literal("")),
+  qr_code_url: z.string().optional().or(z.literal("")),
   published: z.boolean(),
 });
 
@@ -59,6 +64,7 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
   const [tagInput, setTagInput] = useState("");
   const [steps, setSteps] = useState<StepData[]>([]);
   const [featuredImage, setFeaturedImage] = useState("");
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
 
   const {
     register,
@@ -76,9 +82,16 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
       difficulty: "beginner",
       estimated_minutes: 30,
       featured_image: "",
+      external_link: "",
+      is_paid: false,
+      price: 0,
+      upi_id: "",
+      qr_code_url: "",
       published: false,
     },
   });
+
+  const isPaid = watch("is_paid");
 
   const title = watch("title");
 
@@ -91,10 +104,16 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
         difficulty: tutorial.difficulty,
         estimated_minutes: tutorial.estimated_minutes,
         featured_image: tutorial.featured_image || "",
+        external_link: tutorial.external_link || "",
+        is_paid: tutorial.is_paid || false,
+        price: tutorial.price || 0,
+        upi_id: tutorial.upi_id || "",
+        qr_code_url: tutorial.qr_code_url || "",
         published: tutorial.published,
       });
       setTags(tutorial.tags || []);
       setFeaturedImage(tutorial.featured_image || "");
+      setQrCodeUrl(tutorial.qr_code_url || "");
       setSteps(
         tutorial.steps?.map((s) => ({
           id: s.id,
@@ -111,10 +130,16 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
         difficulty: "beginner",
         estimated_minutes: 30,
         featured_image: "",
+        external_link: "",
+        is_paid: false,
+        price: 0,
+        upi_id: "",
+        qr_code_url: "",
         published: false,
       });
       setTags([]);
       setFeaturedImage("");
+      setQrCodeUrl("");
       setSteps([]);
     }
   }, [tutorial, reset]);
@@ -161,8 +186,13 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
     setValue("featured_image", url);
   };
 
+  const handleQrCodeChange = (url: string) => {
+    setQrCodeUrl(url);
+    setValue("qr_code_url", url);
+  };
+
   const onSubmit = (data: TutorialFormData) => {
-    onSave({ ...data, tags, featured_image: featuredImage || undefined }, steps);
+    onSave({ ...data, tags, featured_image: featuredImage || undefined, qr_code_url: qrCodeUrl || undefined }, steps);
   };
 
   return (
@@ -239,6 +269,59 @@ export function TutorialEditor({ open, onOpenChange, tutorial, onSave, isLoading
             label="Featured Image"
             folder="tutorials"
           />
+
+          {/* External Link */}
+          <div className="space-y-2">
+            <Label htmlFor="external_link">External Link (Google Drive, Mega, etc.)</Label>
+            <Input
+              id="external_link"
+              {...register("external_link")}
+              placeholder="https://drive.google.com/..."
+            />
+          </div>
+
+          {/* Paid Tutorial Settings */}
+          <div className="space-y-4 p-4 border border-border rounded-lg">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="is_paid"
+                checked={isPaid}
+                onCheckedChange={(checked) => setValue("is_paid", checked)}
+              />
+              <Label htmlFor="is_paid">This is a paid tutorial</Label>
+            </div>
+
+            {isPaid && (
+              <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price (₹)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    {...register("price")}
+                    min={0}
+                    placeholder="99"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="upi_id">UPI ID</Label>
+                  <Input
+                    id="upi_id"
+                    {...register("upi_id")}
+                    placeholder="example@upi"
+                  />
+                </div>
+
+                <ImageUpload
+                  value={qrCodeUrl}
+                  onChange={handleQrCodeChange}
+                  label="Payment QR Code"
+                  folder="tutorials"
+                />
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label>Tags</Label>

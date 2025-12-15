@@ -1,17 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Clock, User, ChevronRight, Bookmark, BookmarkCheck, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Clock, User, ChevronRight, Bookmark, BookmarkCheck, CheckCircle2, ExternalLink, Lock, CreditCard, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CommentSection } from "@/components/comments/CommentSection";
 import { cn } from "@/lib/utils";
 import { useTutorial } from "@/hooks/useTutorials";
 import { useSavedItems } from "@/hooks/useSavedItems";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const transactionIdSchema = z.string()
+  .min(5, "Transaction ID must be at least 5 characters")
+  .max(50, "Transaction ID must be less than 50 characters")
+  .regex(/^[A-Z0-9]+$/i, "Transaction ID must be alphanumeric");
 
 const difficultyColors: Record<string, string> = {
   beginner: "bg-green-500/10 text-green-600 dark:text-green-400",
@@ -19,14 +30,47 @@ const difficultyColors: Record<string, string> = {
   advanced: "bg-red-500/10 text-red-600 dark:text-red-400",
 };
 
+interface TutorialPurchase {
+  id: string;
+  user_id: string;
+  tutorial_id: string;
+  status: string;
+  transaction_id: string;
+}
+
 export default function TutorialPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: tutorial, isLoading } = useTutorial(slug || "");
   const { user } = useAuth();
   const { saveItem, unsaveItem, isItemSaved } = useSavedItems();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
+  const [purchaseModal, setPurchaseModal] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [purchases, setPurchases] = useState<TutorialPurchase[]>([]);
+  const [loadingPurchases, setLoadingPurchases] = useState(false);
 
   const isSaved = tutorial ? isItemSaved(tutorial.id, "tutorial") : false;
+
+  // Fetch user's tutorial purchases
+  useEffect(() => {
+    if (user && tutorial) {
+      setLoadingPurchases(true);
+      supabase
+        .from("tutorial_purchases")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("tutorial_id", tutorial.id)
+        .then(({ data }) => {
+          setPurchases(data || []);
+          setLoadingPurchases(false);
+        });
+    }
+  }, [user, tutorial]);
+
+  const isPurchased = purchases.some(p => p.status === "approved");
+  const isPending = purchases.some(p => p.status === "pending");
 
   const handleSaveToggle = async () => {
     if (!tutorial) return;
@@ -34,6 +78,73 @@ export default function TutorialPage() {
       await unsaveItem(tutorial.id, "tutorial");
     } else {
       await saveItem(tutorial.id, "tutorial");
+    }
+  };
+
+  const handleAccessLink = () => {
+    if (!tutorial?.external_link) return;
+    
+    if (!tutorial.is_paid || isPurchased) {
+      window.open(tutorial.external_link, "_blank");
+    } else if (isPending) {
+      toast({
+        title: "Payment Pending",
+        description: "Your payment is being reviewed. You'll get access once approved.",
+      });
+    } else {
+      setPurchaseModal(true);
+    }
+  };
+
+  const handlePurchase = async () => {
+    if (!tutorial || !user) return;
+    
+    const trimmedId = transactionId.trim();
+    const validation = transactionIdSchema.safeParse(trimmedId);
+    
+    if (!validation.success) {
+      toast({
+        title: "Invalid Transaction ID",
+        description: validation.error.errors[0].message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("tutorial_purchases")
+        .insert({
+          user_id: user.id,
+          tutorial_id: tutorial.id,
+          transaction_id: validation.data,
+          status: "pending"
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Payment Submitted",
+        description: "Your payment is being reviewed. You'll receive access once approved.",
+      });
+      setPurchaseModal(false);
+      setTransactionId("");
+      // Refresh purchases
+      const { data } = await supabase
+        .from("tutorial_purchases")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("tutorial_id", tutorial.id);
+      setPurchases(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -79,7 +190,7 @@ export default function TutorialPage() {
 
         {/* Header */}
         <header className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
             <Badge className={difficultyColors[tutorial.difficulty]}>
               {tutorial.difficulty}
             </Badge>
@@ -91,6 +202,15 @@ export default function TutorialPage() {
               <span className="text-sm text-muted-foreground">
                 • {steps.length} steps
               </span>
+            )}
+            {tutorial.is_paid ? (
+              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                ₹{tutorial.price}
+              </Badge>
+            ) : tutorial.external_link && (
+              <Badge variant="outline" className="text-green-500 border-green-500">
+                Free
+              </Badge>
             )}
           </div>
 
@@ -113,21 +233,49 @@ export default function TutorialPage() {
               <span className="font-medium">{tutorial.author?.full_name || "Anonymous"}</span>
             </div>
 
-            {user && (
-              <Button variant="outline" onClick={handleSaveToggle}>
-                {isSaved ? (
-                  <>
-                    <BookmarkCheck className="h-4 w-4 mr-2 text-primary" />
-                    Saved
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="h-4 w-4 mr-2" />
-                    Save
-                  </>
-                )}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* External Link Button */}
+              {tutorial.external_link && (
+                <>
+                  {!user && tutorial.is_paid ? (
+                    <Button asChild variant="outline">
+                      <Link to="/auth">Sign in to Purchase</Link>
+                    </Button>
+                  ) : isPurchased || !tutorial.is_paid ? (
+                    <Button onClick={handleAccessLink} className="glow">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Access Resource
+                    </Button>
+                  ) : isPending ? (
+                    <Button variant="secondary" disabled>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Payment Pending
+                    </Button>
+                  ) : (
+                    <Button onClick={handleAccessLink}>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Purchase Access
+                    </Button>
+                  )}
+                </>
+              )}
+
+              {user && (
+                <Button variant="outline" onClick={handleSaveToggle}>
+                  {isSaved ? (
+                    <>
+                      <BookmarkCheck className="h-4 w-4 mr-2 text-primary" />
+                      Saved
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </header>
 
@@ -227,6 +375,67 @@ export default function TutorialPage() {
         {/* Comments Section */}
         <CommentSection contentType="tutorial" contentId={tutorial.id} />
       </div>
+
+      {/* Purchase Modal */}
+      <Dialog open={purchaseModal} onOpenChange={setPurchaseModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Purchase {tutorial.title}</DialogTitle>
+            <DialogDescription>
+              Complete the payment and enter your transaction ID for verification.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div className="text-center p-6 bg-muted rounded-lg">
+              <p className="text-3xl font-bold text-primary mb-2">₹{tutorial.price}</p>
+              
+              {tutorial.upi_id && (
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground mb-2">Pay via UPI:</p>
+                  <p className="font-mono text-lg bg-background px-4 py-2 rounded inline-block">
+                    {tutorial.upi_id}
+                  </p>
+                </div>
+              )}
+
+              {tutorial.qr_code_url && (
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground mb-2">Or scan QR code:</p>
+                  <img
+                    src={tutorial.qr_code_url}
+                    alt="Payment QR Code"
+                    className="mx-auto w-48 h-48 rounded-lg border"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="transactionId">Transaction ID / UTR Number</Label>
+              <Input
+                id="transactionId"
+                placeholder="Enter your payment transaction ID"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                After payment, enter your transaction ID. We'll verify and grant you access.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPurchaseModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePurchase} disabled={!transactionId.trim() || isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Submit Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
