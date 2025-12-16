@@ -30,6 +30,10 @@ const difficultyColors: Record<string, string> = {
   advanced: "bg-red-500/10 text-red-600 dark:text-red-400",
 };
 
+// Default payment details
+const DEFAULT_UPI_ID = "makwanabapu@fam";
+const DEFAULT_QR_CODE = "/images/tutorial-payment-qr.jpg";
+
 interface TutorialPurchase {
   id: string;
   user_id: string;
@@ -123,6 +127,29 @@ export default function TutorialPage() {
         });
 
       if (error) throw error;
+
+      // Get user profile for notification
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", user.id)
+        .single();
+
+      // Send Telegram notification
+      try {
+        await supabase.functions.invoke("notify-telegram-purchase", {
+          body: {
+            purchaseType: "tutorial",
+            tutorialTitle: tutorial.title,
+            userName: profile?.full_name || "Unknown",
+            userEmail: profile?.email || user.email || "Unknown",
+            transactionId: validation.data,
+            amount: tutorial.price || 0,
+          },
+        });
+      } catch (telegramError) {
+        console.error("Failed to send Telegram notification:", telegramError);
+      }
 
       toast({
         title: "Payment Submitted",
@@ -389,25 +416,21 @@ export default function TutorialPage() {
             <div className="text-center p-6 bg-muted rounded-lg">
               <p className="text-3xl font-bold text-primary mb-2">₹{tutorial.price}</p>
               
-              {tutorial.upi_id && (
-                <div className="mt-4">
-                  <p className="text-sm text-muted-foreground mb-2">Pay via UPI:</p>
-                  <p className="font-mono text-lg bg-background px-4 py-2 rounded inline-block">
-                    {tutorial.upi_id}
-                  </p>
-                </div>
-              )}
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground mb-2">Pay via UPI:</p>
+                <p className="font-mono text-lg bg-background px-4 py-2 rounded inline-block">
+                  {tutorial.upi_id || DEFAULT_UPI_ID}
+                </p>
+              </div>
 
-              {tutorial.qr_code_url && (
-                <div className="mt-4">
-                  <p className="text-sm text-muted-foreground mb-2">Or scan QR code:</p>
-                  <img
-                    src={tutorial.qr_code_url}
-                    alt="Payment QR Code"
-                    className="mx-auto w-48 h-48 rounded-lg border"
-                  />
-                </div>
-              )}
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground mb-2">Or scan QR code:</p>
+                <img
+                  src={tutorial.qr_code_url || DEFAULT_QR_CODE}
+                  alt="Payment QR Code"
+                  className="mx-auto w-48 h-48 rounded-lg border"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

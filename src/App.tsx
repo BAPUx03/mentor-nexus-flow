@@ -25,6 +25,7 @@ import Community from "./pages/Community";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBlogs from "./pages/admin/AdminBlogs";
 import AdminTutorials from "./pages/admin/AdminTutorials";
+import AdminTutorialPurchases from "./pages/admin/AdminTutorialPurchases";
 import AdminSnippets from "./pages/admin/AdminSnippets";
 import AdminMaterials from "./pages/admin/AdminMaterials";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -110,6 +111,14 @@ const App = () => (
                 element={
                   <AdminProtectedRoute>
                     <AdminTutorials />
+                  </AdminProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/tutorial-purchases"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminTutorialPurchases />
                   </AdminProtectedRoute>
                 }
               />

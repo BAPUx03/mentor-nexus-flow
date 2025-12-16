@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Package,
   Shield,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Blog Posts", href: "/admin/blogs", icon: FileText },
   { name: "Tutorials", href: "/admin/tutorials", icon: BookOpen },
+  { name: "Tutorial Purchases", href: "/admin/tutorial-purchases", icon: CreditCard },
   { name: "Code Snippets", href: "/admin/snippets", icon: Code2 },
   { name: "Materials", href: "/admin/materials", icon: Package },
   { name: "Community", href: "/admin/community", icon: MessageCircle },

@@ -1,1 +1,10 @@
 project_id = "mlifhlmnxgwaufmbttup"
+
+[functions.send-approval-email]
+verify_jwt = true
+
+[functions.send-tutorial-approval-email]
+verify_jwt = true
+
+[functions.notify-telegram-purchase]
+verify_jwt = false
