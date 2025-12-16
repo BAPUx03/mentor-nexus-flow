@@ -84,7 +84,7 @@ export default function Tutorials() {
                     </div>
                   )}
                   <CardContent className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <Badge className={difficultyColors[tutorial.difficulty]}>
                         {tutorial.difficulty}
                       </Badge>
@@ -92,6 +92,15 @@ export default function Tutorials() {
                         <Clock className="h-3 w-3 mr-1" />
                         {tutorial.estimated_minutes} min
                       </span>
+                      {tutorial.is_paid ? (
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                          ₹{tutorial.price}
+                        </Badge>
+                      ) : tutorial.external_link && (
+                        <Badge variant="outline" className="text-green-500 border-green-500">
+                          Free
+                        </Badge>
+                      )}
                     </div>
 
                     <h2 className="text-xl font-heading font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">

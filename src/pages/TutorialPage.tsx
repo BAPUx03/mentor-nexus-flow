@@ -57,12 +57,12 @@ export default function TutorialPage() {
   useEffect(() => {
     if (user && tutorial) {
       setLoadingPurchases(true);
-      supabase
-        .from("tutorial_purchases")
+      // Using type assertion since the table was just created and types not regenerated
+      (supabase.from("tutorial_purchases" as any) as any)
         .select("*")
         .eq("user_id", user.id)
         .eq("tutorial_id", tutorial.id)
-        .then(({ data }) => {
+        .then(({ data }: { data: TutorialPurchase[] | null }) => {
           setPurchases(data || []);
           setLoadingPurchases(false);
         });
@@ -113,8 +113,8 @@ export default function TutorialPage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("tutorial_purchases")
+      // Using type assertion since the table was just created and types not regenerated
+      const { error } = await (supabase.from("tutorial_purchases" as any) as any)
         .insert({
           user_id: user.id,
           tutorial_id: tutorial.id,
@@ -131,12 +131,11 @@ export default function TutorialPage() {
       setPurchaseModal(false);
       setTransactionId("");
       // Refresh purchases
-      const { data } = await supabase
-        .from("tutorial_purchases")
+      const { data } = await (supabase.from("tutorial_purchases" as any) as any)
         .select("*")
         .eq("user_id", user.id)
         .eq("tutorial_id", tutorial.id);
-      setPurchases(data || []);
+      setPurchases((data as TutorialPurchase[]) || []);
     } catch (error: any) {
       toast({
         title: "Error",
