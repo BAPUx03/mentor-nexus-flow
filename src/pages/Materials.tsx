@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useMaterials, useUserPurchases, useMaterialMutations, MaterialCategory, Material, fetchMaterialPaymentDetails } from "@/hooks/useMaterials";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 // Validation schema for transaction ID
@@ -73,8 +74,8 @@ export default function Materials() {
 
   const { toast } = useToast();
 
-  const handlePurchase = () => {
-    if (!purchaseModal) return;
+  const handlePurchase = async () => {
+    if (!purchaseModal || !user) return;
     
     const trimmedId = transactionId.trim();
     const validation = transactionIdSchema.safeParse(trimmedId);
@@ -87,8 +88,22 @@ export default function Materials() {
       });
       return;
     }
+
+    // Get user profile for notification
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .single();
     
-    submitPurchase({ materialId: purchaseModal.id, transactionId: validation.data });
+    submitPurchase({ 
+      materialId: purchaseModal.id, 
+      transactionId: validation.data,
+      materialTitle: purchaseModal.title,
+      userName: profile?.full_name || "Unknown",
+      userEmail: profile?.email || user.email || "Unknown",
+      amount: purchaseModal.price || 0,
+    });
     setPurchaseModal(null);
     setTransactionId("");
   };

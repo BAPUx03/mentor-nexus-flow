@@ -30,6 +30,7 @@ const navigation = [
   { name: "Tutorial Purchases", href: "/admin/tutorial-purchases", icon: CreditCard },
   { name: "Code Snippets", href: "/admin/snippets", icon: Code2 },
   { name: "Materials", href: "/admin/materials", icon: Package },
+  { name: "Material Purchases", href: "/admin/material-purchases", icon: CreditCard },
   { name: "Community", href: "/admin/community", icon: MessageCircle },
   { name: "Users", href: "/admin/users", icon: Users, adminOnly: true },
 ];

@@ -28,9 +28,11 @@ import AdminTutorials from "./pages/admin/AdminTutorials";
 import AdminTutorialPurchases from "./pages/admin/AdminTutorialPurchases";
 import AdminSnippets from "./pages/admin/AdminSnippets";
 import AdminMaterials from "./pages/admin/AdminMaterials";
+import AdminMaterialPurchases from "./pages/admin/AdminMaterialPurchases";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminCommunity from "./pages/admin/AdminCommunity";
+import MyPurchases from "./pages/MyPurchases";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +78,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Library />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-purchases"
+                element={
+                  <ProtectedRoute>
+                    <MyPurchases />
                   </ProtectedRoute>
                 }
               />
@@ -135,6 +145,14 @@ const App = () => (
                 element={
                   <AdminProtectedRoute>
                     <AdminMaterials />
+                  </AdminProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/material-purchases"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminMaterialPurchases />
                   </AdminProtectedRoute>
                 }
               />

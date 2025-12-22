@@ -99,6 +99,37 @@ export function useTutorial(slug: string) {
   });
 }
 
+export interface TutorialPurchase {
+  id: string;
+  user_id: string;
+  tutorial_id: string;
+  transaction_id: string;
+  status: "pending" | "approved" | "rejected";
+  admin_notes: string | null;
+  created_at: string;
+  approved_at: string | null;
+  approved_by: string | null;
+  tutorial?: Tutorial;
+}
+
+export function useUserTutorialPurchases() {
+  return useQuery({
+    queryKey: ["user-tutorial-purchases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tutorial_purchases")
+        .select(`
+          *,
+          tutorial:tutorials(*)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as TutorialPurchase[];
+    },
+  });
+}
+
 export function useTutorialMutations() {
   const queryClient = useQueryClient();
   const { user } = useAuth();

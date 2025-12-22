@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Sun, Moon, User, LogOut, Settings, Bookmark, LayoutDashboard, ChevronDown, BookOpen, Code, FileText, Package, Users } from "lucide-react";
+import { Menu, X, Sun, Moon, User, LogOut, Settings, Bookmark, LayoutDashboard, ChevronDown, BookOpen, Code, FileText, Package, Users, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -39,6 +39,7 @@ const resourcesNavigation = [
 const mobileUserNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Library", href: "/library", icon: Bookmark },
+  { name: "My Purchases", href: "/my-purchases", icon: ShoppingBag },
   { name: "Profile", href: "/profile", icon: User },
 ];
 
@@ -206,6 +207,12 @@ export function Header() {
                   <Link to="/library" className="cursor-pointer">
                     <Bookmark className="mr-2 h-4 w-4" />
                     My Library
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/my-purchases" className="cursor-pointer">
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    My Purchases
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

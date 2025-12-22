@@ -11,6 +11,7 @@ const corsHeaders = {
 interface ApprovalEmailRequest {
   email: string;
   materialTitle: string;
+  externalLink?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -72,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // 5. Validate input
-    const { email, materialTitle }: ApprovalEmailRequest = await req.json();
+    const { email, materialTitle, externalLink }: ApprovalEmailRequest = await req.json();
     
     if (!email || typeof email !== 'string') {
       return new Response(
@@ -140,8 +141,8 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div class="content">
                 <p>Great news! Your payment for <strong>${sanitizedTitle}</strong> has been verified and approved.</p>
-                <p>You now have full access to this resource. Visit the Materials page to access your purchase.</p>
-                <a href="https://devlearn.app/materials" class="button">Access Your Material</a>
+                <p>You now have full access to this resource.</p>
+                ${externalLink ? `<a href="${externalLink}" class="button">Access Your Resource</a>` : '<a href="https://devlearn.app/my-purchases" class="button">View My Purchases</a>'}
                 <p style="margin-top: 30px;">Thank you for your purchase!</p>
               </div>
               <div class="footer">

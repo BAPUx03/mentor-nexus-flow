@@ -194,7 +194,14 @@ export function useMaterialMutations() {
   });
 
   const submitPurchase = useMutation({
-    mutationFn: async ({ materialId, transactionId }: { materialId: string; transactionId: string }) => {
+    mutationFn: async ({ materialId, transactionId, materialTitle, userName, userEmail, amount }: { 
+      materialId: string; 
+      transactionId: string;
+      materialTitle?: string;
+      userName?: string;
+      userEmail?: string;
+      amount?: number;
+    }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -204,6 +211,22 @@ export function useMaterialMutations() {
         transaction_id: transactionId,
       });
       if (error) throw error;
+
+      // Send Telegram notification
+      try {
+        await supabase.functions.invoke("notify-telegram-purchase", {
+          body: {
+            purchaseType: "material",
+            tutorialTitle: materialTitle || "Unknown Material",
+            userName: userName || "Unknown",
+            userEmail: userEmail || user.email || "Unknown",
+            transactionId,
+            amount: amount || 0,
+          },
+        });
+      } catch (telegramError) {
+        console.error("Failed to send Telegram notification:", telegramError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-purchases"] });
@@ -218,7 +241,7 @@ export function useMaterialMutations() {
   });
 
   const approvePurchase = useMutation({
-    mutationFn: async ({ purchaseId, userEmail, materialTitle }: { purchaseId: string; userEmail: string; materialTitle: string }) => {
+    mutationFn: async ({ purchaseId, userEmail, materialTitle, externalLink }: { purchaseId: string; userEmail: string; materialTitle: string; externalLink?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -236,7 +259,7 @@ export function useMaterialMutations() {
 
       // Send approval email via edge function
       const { error: emailError } = await supabase.functions.invoke("send-approval-email", {
-        body: { email: userEmail, materialTitle },
+        body: { email: userEmail, materialTitle, externalLink },
       });
 
       if (emailError) {
@@ -246,6 +269,7 @@ export function useMaterialMutations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pending-purchases"] });
+      queryClient.invalidateQueries({ queryKey: ["user-purchases"] });
       toast({ title: "Purchase approved", description: "Email sent to user with access link." });
     },
   });

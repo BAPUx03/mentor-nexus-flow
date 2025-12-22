@@ -96,6 +96,7 @@ export default function AdminMaterials() {
       purchaseId: purchase.id,
       userEmail: purchase.user?.email || "",
       materialTitle: purchase.material?.title || "",
+      externalLink: purchase.material?.external_link || "",
     });
   };
 
