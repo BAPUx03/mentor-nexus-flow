@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://bapux03.github.io/mentor-nexus-flow/sitemap.xml

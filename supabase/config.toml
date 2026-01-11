@@ -1,5 +1,8 @@
 project_id = "mlifhlmnxgwaufmbttup"
 
+[functions.chat]
+verify_jwt = false
+
 [functions.send-approval-email]
 verify_jwt = true
 
