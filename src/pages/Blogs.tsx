@@ -6,12 +6,19 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 export default function Blogs() {
   const { data: blogs, isLoading } = useBlogPosts({ published: true });
 
   return (
     <Layout>
+      <SEOHead
+        title="Developer Blog"
+        description="Read the latest insights, tutorials, and updates from the developer community. Stay up to date with programming trends and best practices."
+        canonicalUrl="/blogs"
+        keywords={["developer blog", "programming articles", "coding tutorials", "tech insights"]}
+      />
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="max-w-3xl mb-12">

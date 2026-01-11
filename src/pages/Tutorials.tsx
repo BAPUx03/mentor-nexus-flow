@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTutorials } from "@/hooks/useTutorials";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 const difficultyColors: Record<string, string> = {
   beginner: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
@@ -22,6 +23,12 @@ export default function Tutorials() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Tutorials"
+        description="Learn programming step-by-step with our comprehensive tutorials. From beginner to advanced, master new skills and technologies."
+        canonicalUrl="/tutorials"
+        keywords={["programming tutorials", "coding guides", "learn to code", "step-by-step tutorials"]}
+      />
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="max-w-3xl mb-8">

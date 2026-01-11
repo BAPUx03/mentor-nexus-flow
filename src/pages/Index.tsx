@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   ArrowRight, 
@@ -19,6 +20,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import { useTutorials } from "@/hooks/useTutorials";
 import { useCodeSnippets } from "@/hooks/useCodeSnippets";
+import { SEOHead } from "@/components/seo/SEOHead";
+import { AIHeroSection } from "@/components/ai/AIHeroSection";
+import { AIChatWidget } from "@/components/ai/AIChatWidget";
 
 const difficultyColors: Record<string, string> = {
   beginner: "bg-success/10 text-success border-success/20",
@@ -37,16 +41,31 @@ const Index = () => {
   const { data: blogs, isLoading: blogsLoading } = useBlogPosts({ published: true });
   const { data: tutorials, isLoading: tutorialsLoading } = useTutorials({ published: true });
   const { data: snippets, isLoading: snippetsLoading } = useCodeSnippets({ published: true });
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const featuredBlogs = blogs?.slice(0, 3) || [];
   const featuredTutorials = tutorials?.slice(0, 3) || [];
   const featuredSnippets = snippets?.slice(0, 4) || [];
 
+  // Handle pending AI message from hero section
+  useEffect(() => {
+    const pendingMessage = localStorage.getItem("pendingAIMessage");
+    if (pendingMessage && isChatOpen) {
+      localStorage.removeItem("pendingAIMessage");
+    }
+  }, [isChatOpen]);
+
   return (
     <Layout>
+      <SEOHead
+        title="Home"
+        description="MentorNexus - Your ultimate developer learning platform. Access tutorials, code snippets, and AI-powered mentorship to level up your programming skills."
+        canonicalUrl="/"
+        keywords={["programming tutorials", "code snippets", "developer learning", "AI coding mentor", "learn programming"]}
+      />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden hero-pattern">
-        {/* Background decorations */}
         <div className="absolute inset-0 bg-gradient-hero" />
         <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse-subtle" />
         <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-accent/15 rounded-full blur-3xl animate-pulse-subtle" style={{ animationDelay: '1s' }} />
@@ -103,6 +122,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* AI Mentor Section */}
+      <AIHeroSection onOpenChat={() => setIsChatOpen(true)} />
 
       {/* Featured Tutorials */}
       <section className="container mx-auto px-4 py-20">
@@ -400,6 +422,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* AI Chat Widget */}
+      <AIChatWidget key={isChatOpen ? "open" : "closed"} />
     </Layout>
   );
 };
